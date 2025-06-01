@@ -1,29 +1,31 @@
 pipeline {
     agent any
+
+    environment {
+        GIT_REPO = 'https://github.com/C-MEN69/prueba2.git'
+        GIT_CREDENTIALS_ID = 'github-token'
+    }
+
     stages {
         stage('Clonar repositorio') {
             steps {
-                git 'https://github.com/tu-usuario/mi-proyecto.git'
+                git credentialsId: "${GIT_CREDENTIALS_ID}", url: "${GIT_REPO}"
             }
         }
 
         stage('Construir imagen Docker') {
             steps {
-                script {
-                    docker.build('sample-app', '.')
-                }
+                sh 'docker build -t sample-app .'
             }
         }
 
         stage('Ejecutar aplicación') {
             steps {
-                script {
-                    // Eliminar contenedor previo si existe
-                    sh 'docker rm -f sample-app || true'
-                    
-                    // Ejecutar contenedor exponiendo el puerto 9999
-                    sh 'docker run -d -p 9999:9999 --name sample-app sample-app'
-                }
+                sh '''
+                docker stop sample-app || true
+                docker rm sample-app || true
+                docker run -d --name sample-app -p 9999:9999 sample-app
+                '''
             }
         }
     }
